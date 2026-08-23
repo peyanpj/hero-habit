@@ -12,12 +12,25 @@ const getAvatarTier = (percentage) => {
 export default function App() {
   const [habits, setHabits] = useState([]);
   const [newHabitText, setNewHabitText] = useState('');
-  const [selectedDay, setSelectedDay] = useState('Monday');
   const [timeSlots, setTimeSlots] = useState([]);
   const [weeklyTasks, setWeeklyTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  // Automatically select today's day of week
+  const getTodayName = () => {
+    const dayIdx = new Date().getDay();
+    return daysOfWeek[dayIdx === 0 ? 6 : dayIdx - 1];
+  };
+  const [selectedDay, setSelectedDay] = useState(getTodayName());
+
+  // Real-time clock tick
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -35,6 +48,19 @@ export default function App() {
     setLoading(false);
   };
 
+  // Calculate days elapsed since habit creation (Day 1 to Day 21)
+  const calculateHabitDay = (createdAtTimestamp) => {
+    if (!createdAtTimestamp) return 1;
+    const createdDate = new Date(createdAtTimestamp);
+    const today = new Date();
+    // Reset time components for clean calendar day difference calculation
+    createdDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(today - createdDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
+
   // --- Habit Operations ---
   const toggleHabit = async (id, currentStatus) => {
     setHabits(habits.map((h) => (h.id === id ? { ...h, completed_today: !currentStatus } : h)));
@@ -46,7 +72,7 @@ export default function App() {
     if (!newHabitText.trim() || habits.length >= 10) return;
     const { data } = await supabase
       .from('habits')
-      .insert([{ name: newHabitText, completed_today: false, day_count: 1 }])
+      .insert([{ name: newHabitText, completed_today: false }])
       .select();
 
     if (data) {
@@ -79,16 +105,41 @@ export default function App() {
 
   const completedWeeklyCount = weeklyTasks.filter((t) => t.done).length;
   const weeklyTaskPercentage = weeklyTasks.length > 0 ? Math.round((completedWeeklyCount / weeklyTasks.length) * 100) : 0;
-  const currentDayIndex = 3;
+
+  // Real Dynamic Day of Week Index (Mon = 1, Tue = 2, ..., Sun = 7)
+  const rawDayIndex = currentDateTime.getDay();
+  const currentDayIndex = rawDayIndex === 0 ? 7 : rawDayIndex;
   const timeExpiredPercentage = Math.round((currentDayIndex / 7) * 100);
+
+  // Date Formatting String
+  const formattedDate = currentDateTime.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  const formattedTime = currentDateTime.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans">
+      {/* Top Header with Real-Time Clock */}
       <header className="max-w-6xl mx-auto mb-8 text-center border-b border-slate-800 pb-6">
         <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
           HeroHabit
         </h1>
         <p className="text-slate-400 mt-2 text-sm md:text-base">Level up your daily discipline, conquer your schedule.</p>
+
+        {/* Real-time Date Badge */}
+        <div className="mt-4 inline-flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-full text-xs md:text-sm font-mono text-cyan-400 shadow-inner">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          <span>{formattedDate}</span>
+          <span className="text-slate-600">•</span>
+          <span>{formattedTime}</span>
+        </div>
       </header>
 
       {loading ? (
@@ -96,7 +147,7 @@ export default function App() {
       ) : (
         <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          {/* HABIT TRACKER */}
+          {/* HABIT TRACKER (21-Day Dynamic Expiration) */}
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-6">
@@ -125,24 +176,36 @@ export default function App() {
               </div>
 
               <ul className="space-y-3 mb-6">
-                {habits.map((habit) => (
-                  <li key={habit.id} className="flex items-center justify-between bg-slate-800/40 border border-slate-800 p-3.5 rounded-xl hover:border-slate-700 transition">
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={habit.completed_today}
-                        onChange={() => toggleHabit(habit.id, habit.completed_today)}
-                        className="w-5 h-5 accent-cyan-500 rounded cursor-pointer"
-                      />
-                      <span className={`text-sm font-medium ${habit.completed_today ? 'line-through text-slate-500' : 'text-slate-200'}`}>
-                        {habit.name}
-                      </span>
-                    </div>
-                    <span className="text-xs font-mono text-cyan-400/80 bg-cyan-950/60 px-2.5 py-1 rounded-md border border-cyan-800/40">
-                      Day {habit.day_count}/21
-                    </span>
-                  </li>
-                ))}
+                {habits.map((habit) => {
+                  const daysStayed = calculateHabitDay(habit.created_at);
+                  const isCompleted21Days = daysStayed > 21;
+
+                  return (
+                    <li key={habit.id} className="flex items-center justify-between bg-slate-800/40 border border-slate-800 p-3.5 rounded-xl hover:border-slate-700 transition">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={habit.completed_today}
+                          onChange={() => toggleHabit(habit.id, habit.completed_today)}
+                          className="w-5 h-5 accent-cyan-500 rounded cursor-pointer"
+                        />
+                        <span className={`text-sm font-medium ${habit.completed_today ? 'line-through text-slate-500' : 'text-slate-200'}`}>
+                          {habit.name}
+                        </span>
+                      </div>
+
+                      {isCompleted21Days ? (
+                        <span className="text-xs font-semibold text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-md border border-emerald-800">
+                          21-Day Master 🎉
+                        </span>
+                      ) : (
+                        <span className="text-xs font-mono text-cyan-400/80 bg-cyan-950/60 px-2.5 py-1 rounded-md border border-cyan-800/40">
+                          Day {daysStayed}/21
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -208,7 +271,7 @@ export default function App() {
 
               <div className="space-y-3">
                 {currentSlots.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic py-6 text-center">No slots for {selectedDay}.</p>
+                  <p className="text-xs text-slate-500 italic py-6 text-center">No slots scheduled for {selectedDay}.</p>
                 ) : (
                   currentSlots.map((slot) => (
                     <div key={slot.id} className="flex items-center justify-between bg-slate-800/40 border border-slate-800 p-3 rounded-xl">
@@ -233,7 +296,7 @@ export default function App() {
             </div>
           </section>
 
-          {/* WEEKLY SPRINT */}
+          {/* WEEKLY SPRINT (Real-Time 1/7 to 7/7 calculation) */}
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl lg:col-span-2">
             <h2 className="text-2xl font-bold text-white mb-6">Weekly Task Sprint</h2>
 
