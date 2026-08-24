@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient';
+import Auth from './Auth';
 
 const getAvatarTier = (percentage) => {
   if (percentage >= 80) return { title: 'Legend', emoji: '👑', color: 'from-amber-400 to-yellow-600', text: 'text-amber-400' };
@@ -30,6 +31,7 @@ const formatPastTaskDate = (dateString) => {
 };
 
 export default function App() {
+  const [session, setSession] = useState(null);
   const [habits, setHabits] = useState([]);
   const [newHabitText, setNewHabitText] = useState('');
   const [timeSlots, setTimeSlots] = useState([]);
@@ -42,12 +44,24 @@ export default function App() {
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  // Automatically select today's day of week
   const getTodayName = () => {
     const dayIdx = new Date().getDay();
     return daysOfWeek[dayIdx === 0 ? 6 : dayIdx - 1];
   };
   const [selectedDay, setSelectedDay] = useState(getTodayName());
+
+  // Listen for Supabase Authentication state
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Real-time clock tick
   useEffect(() => {
@@ -55,9 +69,10 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Fetch data only when user is logged in
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (session) fetchData();
+  }, [session]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -71,17 +86,14 @@ export default function App() {
     setLoading(false);
   };
 
-  // Calculate days elapsed since habit creation (Day 1 to Day 21)
   const calculateHabitDay = (createdAtTimestamp) => {
     if (!createdAtTimestamp) return 1;
     const createdDate = new Date(createdAtTimestamp);
     const today = new Date();
-    // Reset time components for clean calendar day difference calculation
     createdDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
     const diffTime = Math.abs(today - createdDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    return diffDays;
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   };
 
   // --- Habit Operations ---
@@ -95,7 +107,7 @@ export default function App() {
     if (!newHabitText.trim() || habits.length >= 10) return;
     const { data } = await supabase
       .from('habits')
-      .insert([{ name: newHabitText, completed_today: false }])
+      .insert([{ name: newHabitText, completed_today: false, user_id: session.user.id }])
       .select();
 
     if (data) {
@@ -125,7 +137,8 @@ export default function App() {
         day_of_week: selectedDay,
         time: newSlotTime,
         task: newSlotTask,
-        done: false
+        done: false,
+        user_id: session.user.id
       }])
       .select();
 
@@ -152,7 +165,7 @@ export default function App() {
     if (!newWeeklyTaskText.trim()) return;
     const { data } = await supabase
       .from('weekly_tasks')
-      .insert([{ title: newWeeklyTaskText, done: false }])
+      .insert([{ title: newWeeklyTaskText, done: false, user_id: session.user.id }])
       .select();
 
     if (data) {
@@ -165,6 +178,11 @@ export default function App() {
     setWeeklyTasks(weeklyTasks.filter((t) => t.id !== id));
     await supabase.from('weekly_tasks').delete().eq('id', id);
   };
+
+  // Show Sign In / Sign Up screen if not authenticated
+  if (!session) {
+    return <Auth />;
+  }
 
   // Calculations
   const completedHabitsCount = habits.filter((h) => h.completed_today).length;
@@ -181,12 +199,10 @@ export default function App() {
   const completedWeeklyCount = currentWeekTasks.filter((t) => t.done).length;
   const weeklyTaskPercentage = currentWeekTasks.length > 0 ? Math.round((completedWeeklyCount / currentWeekTasks.length) * 100) : 0;
 
-  // Real Dynamic Day of Week Index (Mon = 1, Tue = 2, ..., Sun = 7)
   const rawDayIndex = currentDateTime.getDay();
   const currentDayIndex = rawDayIndex === 0 ? 7 : rawDayIndex;
   const timeExpiredPercentage = Math.round((currentDayIndex / 7) * 100);
 
-  // Date Formatting String
   const formattedDate = currentDateTime.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
@@ -201,28 +217,37 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 font-sans">
-      {/* Top Header with Real-Time Clock */}
-      <header className="max-w-6xl mx-auto mb-8 text-center border-b border-slate-800 pb-6">
-        <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
-          HeroHabit
-        </h1>
-        <p className="text-slate-400 mt-2 text-sm md:text-base">Level up your daily discipline, conquer your schedule.</p>
+      <header className="max-w-6xl mx-auto mb-8 border-b border-slate-800 pb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+            HeroHabit
+          </h1>
+          <p className="text-slate-400 text-xs md:text-sm">Level up your daily discipline, conquer your schedule.</p>
+        </div>
 
-        {/* Real-time Date Badge */}
-        <div className="mt-4 inline-flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-1.5 rounded-full text-xs md:text-sm font-mono text-cyan-400 shadow-inner">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span>{formattedDate}</span>
-          <span className="text-slate-600">•</span>
-          <span>{formattedTime}</span>
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center gap-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-full text-xs font-mono text-cyan-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span>{formattedDate}</span>
+            <span className="text-slate-600">•</span>
+            <span>{formattedTime}</span>
+          </div>
+
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 text-xs px-3 py-1.5 rounded-full font-medium transition"
+          >
+            Sign Out
+          </button>
         </div>
       </header>
 
       {loading ? (
-        <div className="text-center py-20 text-slate-400 animate-pulse">Connecting to Supabase...</div>
+        <div className="text-center py-20 text-slate-400 animate-pulse">Loading dashboard...</div>
       ) : (
         <main className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          {/* HABIT TRACKER (21-Day Dynamic Expiration) */}
+          {/* HABIT TRACKER */}
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-6">
@@ -393,7 +418,7 @@ export default function App() {
             <form onSubmit={addSlot} className="flex gap-2 pt-4 mt-6 border-t border-slate-800">
               <input
                 type="text"
-                placeholder="Time (e.g. 09:00 AM)"
+                placeholder="Time (09:00 AM)"
                 value={newSlotTime}
                 onChange={(e) => setNewSlotTime(e.target.value)}
                 className="w-1/3 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
@@ -414,7 +439,7 @@ export default function App() {
             </form>
           </section>
 
-          {/* WEEKLY SPRINT (Real-Time 1/7 to 7/7 calculation) */}
+          {/* WEEKLY SPRINT */}
           <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl lg:col-span-2">
             <h2 className="text-2xl font-bold text-white mb-6">Weekly Task Sprint</h2>
 
