@@ -25,7 +25,28 @@ export default function HomePage({
                 >
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-4xl">{habitAvatar.emoji}</span>
+                            {habitAvatar.isImage ? (
+                                habitAvatar.tierId === 'lazy' ? (
+                                    <div className="relative inline-block">
+                                        <img
+                                            src={habitAvatar.src}
+                                            alt={habitAvatar.title}
+                                            className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-egg-breathe"
+                                        />
+                                        <span className="zzz-particle absolute -top-1 right-1 text-xs text-slate-300 font-bold" style={{ animationDelay: '0s' }}>z</span>
+                                        <span className="zzz-particle absolute -top-3 right-0 text-sm text-slate-200 font-bold" style={{ animationDelay: '0.5s' }}>z</span>
+                                        <span className="zzz-particle absolute -top-5 -right-1 text-base text-slate-100 font-bold" style={{ animationDelay: '1s' }}>z</span>
+                                    </div>
+                                ) : (
+                                    <img
+                                        src={habitAvatar.src}
+                                        alt={habitAvatar.title}
+                                        className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-float"
+                                    />
+                                )
+                            ) : (
+                                <span className="text-4xl">{habitAvatar.emoji}</span>
+                            )}
                             <span className={`text-xs font-bold px-3 py-1 rounded-full bg-slate-800 border border-slate-700 ${habitAvatar.text}`}>
                                 {habitAvatar.title}
                             </span>
@@ -57,7 +78,28 @@ export default function HomePage({
                 >
                     <div>
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-4xl">{timetableAvatar.emoji}</span>
+                            {timetableAvatar.isImage ? (
+                                timetableAvatar.tierId === 'lazy' ? (
+                                    <div className="relative inline-block">
+                                        <img
+                                            src={timetableAvatar.src}
+                                            alt={timetableAvatar.title}
+                                            className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-egg-breathe"
+                                        />
+                                        <span className="zzz-particle absolute -top-1 right-1 text-xs text-slate-300 font-bold" style={{ animationDelay: '0s' }}>z</span>
+                                        <span className="zzz-particle absolute -top-3 right-0 text-sm text-slate-200 font-bold" style={{ animationDelay: '0.5s' }}>z</span>
+                                        <span className="zzz-particle absolute -top-5 -right-1 text-base text-slate-100 font-bold" style={{ animationDelay: '1s' }}>z</span>
+                                    </div>
+                                ) : (
+                                    <img
+                                        src={timetableAvatar.src}
+                                        alt={timetableAvatar.title}
+                                        className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-float"
+                                    />
+                                )
+                            ) : (
+                                <span className="text-4xl">{timetableAvatar.emoji}</span>
+                            )}
                             <span className={`text-xs font-bold px-3 py-1 rounded-full bg-slate-800 border border-slate-700 ${timetableAvatar.text}`}>
                                 {timetableAvatar.title}
                             </span>

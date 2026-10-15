@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import HabitsPage from './pages/HabitsPage';
 import TimetablePage from './pages/TimetablePage';
 import WeeklyPage from './pages/WeeklyPage';
+import lazyImg from './assets/lazy.jpeg';
 
 const playSound = (type) => {
   try {
@@ -49,7 +50,7 @@ const getAvatarTier = (percentage) => {
   if (percentage >= 60) return { title: 'Pro', emoji: '⚔️', color: 'from-purple-500 to-indigo-600', text: 'text-purple-400' };
   if (percentage >= 40) return { title: 'Semi-Pro', emoji: '🗡️', color: 'from-blue-400 to-cyan-600', text: 'text-blue-400' };
   if (percentage >= 20) return { title: 'Amateur', emoji: '🐣', color: 'from-emerald-400 to-green-600', text: 'text-emerald-400' };
-  return { title: 'Lazy', emoji: '💤', color: 'from-slate-500 to-gray-700', text: 'text-slate-400' };
+  return { title: 'Lazy', isImage: true, src: lazyImg, tierId: 'lazy', color: 'from-slate-500 to-gray-700', text: 'text-slate-400' };
 };
 
 const isCurrentWeek = (dateInput) => {

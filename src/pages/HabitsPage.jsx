@@ -31,7 +31,28 @@ export default function HabitsPage({
                     </div>
 
                     <div className="flex items-center gap-3 bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700">
-                        <span className="text-3xl">{habitAvatar.emoji}</span>
+                        {habitAvatar.isImage ? (
+                            habitAvatar.tierId === 'lazy' ? (
+                                <div className="relative inline-block">
+                                    <img
+                                        src={habitAvatar.src}
+                                        alt={habitAvatar.title}
+                                        className="w-10 h-10 object-contain rounded-full mix-blend-screen animate-egg-breathe"
+                                    />
+                                    <span className="zzz-particle absolute -top-1 right-1 text-xs text-slate-300 font-bold" style={{ animationDelay: '0s' }}>z</span>
+                                    <span className="zzz-particle absolute -top-3 right-0 text-sm text-slate-200 font-bold" style={{ animationDelay: '0.5s' }}>z</span>
+                                    <span className="zzz-particle absolute -top-5 -right-1 text-base text-slate-100 font-bold" style={{ animationDelay: '1s' }}>z</span>
+                                </div>
+                            ) : (
+                                <img
+                                    src={habitAvatar.src}
+                                    alt={habitAvatar.title}
+                                    className="w-10 h-10 object-contain rounded-full mix-blend-screen animate-float"
+                                />
+                            )
+                        ) : (
+                            <span className="text-3xl">{habitAvatar.emoji}</span>
+                        )}
                         <div className="text-right">
                             <p className="text-xs text-slate-400 font-medium">Habit Rank</p>
                             <p className={`text-sm font-bold ${habitAvatar.text}`}>{habitAvatar.title}</p>
