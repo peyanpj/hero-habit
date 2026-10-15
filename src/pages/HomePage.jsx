@@ -33,7 +33,7 @@ export default function HomePage({
                                         <img
                                             src={habitAvatar.src}
                                             alt={habitAvatar.title}
-                                            className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-egg-breathe"
+                                            className="w-12 h-12 object-contain rounded-full animate-egg-breathe"
                                         />
                                         <span className="zzz-particle absolute -top-1 right-1 text-xs text-slate-300 font-bold" style={{ animationDelay: '0s' }}>z</span>
                                         <span className="zzz-particle absolute -top-3 right-0 text-sm text-slate-200 font-bold" style={{ animationDelay: '0.5s' }}>z</span>
@@ -43,7 +43,7 @@ export default function HomePage({
                                     <img
                                         src={habitAvatar.src}
                                         alt={habitAvatar.title}
-                                        className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-float"
+                                        className="w-12 h-12 object-contain rounded-full animate-float"
                                     />
                                 )
                             ) : (
@@ -86,7 +86,7 @@ export default function HomePage({
                                         <img
                                             src={timetableAvatar.src}
                                             alt={timetableAvatar.title}
-                                            className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-egg-breathe"
+                                            className="w-12 h-12 object-contain rounded-full animate-egg-breathe"
                                         />
                                         <span className="zzz-particle absolute -top-1 right-1 text-xs text-slate-300 font-bold" style={{ animationDelay: '0s' }}>z</span>
                                         <span className="zzz-particle absolute -top-3 right-0 text-sm text-slate-200 font-bold" style={{ animationDelay: '0.5s' }}>z</span>
@@ -96,7 +96,7 @@ export default function HomePage({
                                     <img
                                         src={timetableAvatar.src}
                                         alt={timetableAvatar.title}
-                                        className="w-12 h-12 object-contain rounded-full mix-blend-screen animate-float"
+                                        className="w-12 h-12 object-contain rounded-full animate-float"
                                     />
                                 )
                             ) : (

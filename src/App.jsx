@@ -7,7 +7,7 @@ import HomePage from './pages/HomePage';
 import HabitsPage from './pages/HabitsPage';
 import TimetablePage from './pages/TimetablePage';
 import WeeklyPage from './pages/WeeklyPage';
-import lazyImg from './assets/lazy.jpeg';
+import lazyImg from './assets/lazy.png';
 
 const playSound = (type) => {
   try {
@@ -82,7 +82,7 @@ function DragonVisualizer({ percentage, avatar }) {
         <img
           src={avatar?.isImage ? avatar.src : lazyImg}
           alt={avatar?.title || 'Dragon Egg'}
-          className="w-32 h-32 md:w-36 md:h-36 object-contain animate-egg-breathe mix-blend-screen hover:scale-105 transition duration-300"
+          className="w-32 h-32 md:w-36 md:h-36 object-contain animate-egg-breathe hover:scale-105 transition duration-300"
         />
         {isLazy && (
           <>
