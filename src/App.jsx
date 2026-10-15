@@ -73,6 +73,48 @@ const formatPastTaskDate = (dateString) => {
   return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 };
 
+function DragonVisualizer({ percentage, avatar }) {
+  const isLazy = avatar?.tierId === 'lazy' || percentage < 20;
+
+  return (
+    <div className="text-center mb-8">
+      <div className="relative w-44 h-44 md:w-48 md:h-48 flex items-center justify-center glowing-pedestal rounded-full mb-2 mx-auto">
+        <img
+          src={avatar?.isImage ? avatar.src : lazyImg}
+          alt={avatar?.title || 'Dragon Egg'}
+          className="w-32 h-32 md:w-36 md:h-36 object-contain animate-egg-breathe mix-blend-screen hover:scale-105 transition duration-300"
+        />
+        {isLazy && (
+          <>
+            <span className="zzz-particle" style={{ top: '25%', right: '30%', animationDelay: '0s' }}>Z</span>
+            <span className="zzz-particle text-sm" style={{ top: '35%', right: '25%', animationDelay: '1s' }}>z</span>
+            <span className="zzz-particle text-xs" style={{ top: '45%', right: '22%', animationDelay: '2s' }}>z</span>
+          </>
+        )}
+      </div>
+
+      <div className="inline-block text-center">
+        <div className="text-xs uppercase tracking-widest font-extrabold text-cyan-400 mb-1">
+          DISCIPLINE GUARDIAN
+        </div>
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <span className={`text-xl font-black ${avatar?.text || 'text-slate-400'}`}>
+            {avatar?.title || 'Lazy'}
+          </span>
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+            {percentage}%
+          </span>
+        </div>
+        <p className="text-xs text-slate-400 italic">
+          {percentage < 20
+            ? 'Your guardian is dormant. Level up habits to 20% to help it hatch! 🥚'
+            : 'Your guardian has awakened! Keep training to evolve! 🐲'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [currentPage, setCurrentPage] = useState('home');
@@ -257,6 +299,19 @@ export default function App() {
   const pastMissedTasks = weeklyTasks.filter((t) => !isCurrentWeek(t.created_at) && !t.done);
   const completedWeeklyCount = currentWeekTasks.filter((t) => t.done).length;
   const weeklyTaskPercentage = currentWeekTasks.length > 0 ? Math.round((completedWeeklyCount / currentWeekTasks.length) * 100) : 0;
+  const weeklyAvatar = getAvatarTier(weeklyTaskPercentage);
+
+  const overallPercentage = Math.round(((habitPercentage + timetablePercentage + weeklyTaskPercentage) / 300) * 100) || 0;
+  const overallAvatar = getAvatarTier(overallPercentage);
+
+  const activeVisualizer =
+    currentPage === 'habits'
+      ? { percentage: habitPercentage, avatar: habitAvatar }
+      : currentPage === 'timetable'
+      ? { percentage: timetablePercentage, avatar: timetableAvatar }
+      : currentPage === 'weekly'
+      ? { percentage: weeklyTaskPercentage, avatar: weeklyAvatar }
+      : { percentage: overallPercentage, avatar: overallAvatar };
 
   const rawDayIndex = currentDateTime.getDay();
   const currentDayIndex = rawDayIndex === 0 ? 7 : rawDayIndex;
@@ -325,6 +380,11 @@ export default function App() {
         <div className="text-center py-20 text-slate-400 animate-pulse">Loading dashboard...</div>
       ) : (
         <main className="max-w-6xl mx-auto">
+          <DragonVisualizer
+            percentage={activeVisualizer.percentage}
+            avatar={activeVisualizer.avatar}
+          />
+
           {currentPage === 'home' && (
             <HomePage
               onNavigate={(page) => setCurrentPage(page)}
@@ -335,6 +395,8 @@ export default function App() {
               selectedDay={selectedDay}
               weeklyTaskPercentage={weeklyTaskPercentage}
               currentWeekTasksCount={currentWeekTasks.length}
+              overallPercentage={overallPercentage}
+              overallAvatar={overallAvatar}
             />
           )}
 
@@ -349,6 +411,8 @@ export default function App() {
               calculateHabitDay={calculateHabitDay}
               habitPercentage={habitPercentage}
               habitAvatar={habitAvatar}
+              overallPercentage={overallPercentage}
+              overallAvatar={overallAvatar}
               onBack={() => setCurrentPage('home')}
             />
           )}
@@ -368,6 +432,8 @@ export default function App() {
               setNewSlotTask={setNewSlotTask}
               timetablePercentage={timetablePercentage}
               timetableAvatar={timetableAvatar}
+              overallPercentage={overallPercentage}
+              overallAvatar={overallAvatar}
               onBack={() => setCurrentPage('home')}
             />
           )}
@@ -382,9 +448,12 @@ export default function App() {
               newWeeklyTaskText={newWeeklyTaskText}
               setNewWeeklyTaskText={setNewWeeklyTaskText}
               weeklyTaskPercentage={weeklyTaskPercentage}
+              weeklyAvatar={weeklyAvatar}
               timeExpiredPercentage={timeExpiredPercentage}
               currentDayIndex={currentDayIndex}
               formatPastTaskDate={formatPastTaskDate}
+              overallPercentage={overallPercentage}
+              overallAvatar={overallAvatar}
               onBack={() => setCurrentPage('home')}
             />
           )}

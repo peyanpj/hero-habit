@@ -10,6 +10,8 @@ export default function HabitsPage({
     calculateHabitDay,
     habitPercentage,
     habitAvatar,
+    overallPercentage,
+    overallAvatar,
     onBack,
 }) {
     return (

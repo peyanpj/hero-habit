@@ -14,6 +14,8 @@ export default function TimetablePage({
     setNewSlotTask,
     timetablePercentage,
     timetableAvatar,
+    overallPercentage,
+    overallAvatar,
     onBack,
 }) {
     return (

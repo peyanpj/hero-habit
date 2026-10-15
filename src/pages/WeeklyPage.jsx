@@ -9,9 +9,12 @@ export default function WeeklyPage({
     newWeeklyTaskText,
     setNewWeeklyTaskText,
     weeklyTaskPercentage,
+    weeklyAvatar,
     timeExpiredPercentage,
     currentDayIndex,
     formatPastTaskDate,
+    overallPercentage,
+    overallAvatar,
     onBack,
 }) {
     return (

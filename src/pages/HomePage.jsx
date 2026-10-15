@@ -9,6 +9,8 @@ export default function HomePage({
     selectedDay,
     weeklyTaskPercentage,
     currentWeekTasksCount,
+    overallPercentage,
+    overallAvatar,
 }) {
     return (
         <div className="space-y-6">
