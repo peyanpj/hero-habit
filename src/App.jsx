@@ -8,6 +8,7 @@ import HabitsPage from './pages/HabitsPage';
 import TimetablePage from './pages/TimetablePage';
 import WeeklyPage from './pages/WeeklyPage';
 import lazyImg from './assets/lazy.png';
+import amateurImg from './assets/amateur.png';
 
 const playSound = (type) => {
   try {
@@ -49,7 +50,7 @@ const getAvatarTier = (percentage) => {
   if (percentage >= 80) return { title: 'Legend', emoji: '👑', color: 'from-amber-400 to-yellow-600', text: 'text-amber-400' };
   if (percentage >= 60) return { title: 'Pro', emoji: '⚔️', color: 'from-purple-500 to-indigo-600', text: 'text-purple-400' };
   if (percentage >= 40) return { title: 'Semi-Pro', emoji: '🗡️', color: 'from-blue-400 to-cyan-600', text: 'text-blue-400' };
-  if (percentage >= 20) return { title: 'Amateur', emoji: '🐣', color: 'from-emerald-400 to-green-600', text: 'text-emerald-400' };
+  if (percentage >= 20) return { title: 'Amateur', isImage: true, src: amateurImg, tierId: 'amateur', color: 'from-emerald-400 to-green-600', text: 'text-emerald-400' };
   return { title: 'Lazy', isImage: true, src: lazyImg, tierId: 'lazy', color: 'from-slate-500 to-gray-700', text: 'text-slate-400' };
 };
 
@@ -74,22 +75,22 @@ const formatPastTaskDate = (dateString) => {
 };
 
 function DragonVisualizer({ percentage, avatar }) {
-  const isLazy = avatar?.tierId === 'lazy' || percentage < 20;
-
   return (
     <div className="text-center mb-8">
       <div className="relative w-44 h-44 md:w-48 md:h-48 flex items-center justify-center glowing-pedestal rounded-full mb-2 mx-auto">
-        <img
-          src={avatar?.isImage ? avatar.src : lazyImg}
-          alt={avatar?.title || 'Dragon Egg'}
-          className="w-32 h-32 md:w-36 md:h-36 object-contain animate-egg-breathe hover:scale-105 transition duration-300"
-        />
-        {isLazy && (
+        {avatar?.tierId === 'lazy' && (
           <>
+            <img src={avatar.src} alt="Lazy Egg" className="w-32 h-32 md:w-36 md:h-36 object-contain animate-egg-breathe hover:scale-105 transition duration-300" />
             <span className="zzz-particle" style={{ top: '25%', right: '30%', animationDelay: '0s' }}>Z</span>
             <span className="zzz-particle text-sm" style={{ top: '35%', right: '25%', animationDelay: '1s' }}>z</span>
             <span className="zzz-particle text-xs" style={{ top: '45%', right: '22%', animationDelay: '2s' }}>z</span>
           </>
+        )}
+        {avatar?.tierId === 'amateur' && (
+          <img src={avatar.src} alt="Baby Guardian" className="w-32 h-32 md:w-36 md:h-36 object-contain animate-look-around drop-shadow-lg hover:scale-105 transition duration-300" />
+        )}
+        {!avatar?.tierId && (
+          <span className="text-6xl">{avatar?.emoji || '🥚'}</span>
         )}
       </div>
 
@@ -108,6 +109,8 @@ function DragonVisualizer({ percentage, avatar }) {
         <p className="text-xs text-slate-400 italic">
           {percentage < 20
             ? 'Your guardian is dormant. Level up habits to 20% to help it hatch! 🥚'
+            : percentage < 40
+            ? 'Your baby dragon has hatched! Feed it discipline to help it grow! 🐣'
             : 'Your guardian has awakened! Keep training to evolve! 🐲'}
         </p>
       </div>
